@@ -36,6 +36,14 @@ Wzorzec .env / .env.example:
         - 12-Factor App: https://12factor.net/config
         - python-dotenv: https://github.com/theskumar/python-dotenv
 
+Strategia odczytu zmiennych (lokalnie vs produkcja):
+────────────────────────────────────────────────────
+Lokalnie: zmienne w pliku .env → odczytywane przez dotenv_values()
+Produkcja (Railway): zmienne w os.environ → wstrzykiwane przez Railway
+
+Kolejność: .env ma pierwszeństwo (lokalny developer może nadpisać),
+os.environ jako fallback (produkcja bez pliku .env).
+
 Dlaczego dotenv_values() zamiast load_dotenv() + os.environ?
 ──────────────────────────────────────────────────────────────
 load_dotenv() wstrzykuje zmienne do os.environ – globalnego słownika procesu.
@@ -46,6 +54,7 @@ Czystsze i bardziej przewidywalne w aplikacjach Flask.
 "dotenv_values works more or less the same way as load_dotenv,
  except it doesn't touch the environment."
 """
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -61,9 +70,22 @@ DATA_DIR.mkdir(exist_ok=True)  # tworzy data/ automatycznie przy imporcie
 DATABASE = "cryptomonitor.db"
 
 # Odczytaj .env jako słownik – nie modyfikuje os.environ.
-# Jeśli .env nie istnieje, dotenv_values() zwraca pusty dict
-# i używane są wartości domyślne zdefiniowane w .get().
+# Jeśli .env nie istnieje, dotenv_values() zwraca pusty dict.
+# Lokalnie: wartości z .env mają pierwszeństwo.
+# Produkcja (Railway): .env nie istnieje → fallback na os.environ.
 _env = dotenv_values(BASE_DIR / ".env")
+
+
+def _get(key: str, default: str = "") -> str:
+    """
+    Odczytuje wartość konfiguracyjną.
+
+    Kolejność:
+        1. plik .env (lokalny development)
+        2. os.environ (produkcja – Railway, Docker, CI/CD)
+        3. wartość domyślna
+    """
+    return _env.get(key) or os.environ.get(key) or default
 
 
 class Config:
@@ -71,9 +93,7 @@ class Config:
     Bazowa konfiguracja wspólna dla wszystkich środowisk.
 
     Wartości wrażliwe (SECRET_KEY, COINGECKO_API_KEY, DATABASE_URL)
-    odczytywane z pliku .env przez dotenv_values(). Jeśli .env
-    nie istnieje lub klucz nie jest ustawiony – używana jest wartość
-    domyślna.
+    odczytywane z pliku .env (lokalnie) lub os.environ (produkcja).
     """
 
     # ------------------------------------------------------------------
@@ -82,19 +102,20 @@ class Config:
     # W produkcji MUSI być losowy i tajny.
     # Dokumentacja: https://flask.palletsprojects.com/en/stable/config/
     # ------------------------------------------------------------------
-    SECRET_KEY = _env.get("SECRET_KEY", "dev-secret-key-change-in-production")
+    SECRET_KEY = _get("SECRET_KEY", "dev-secret-key-change-in-production")
 
     # ------------------------------------------------------------------
     # Baza danych
     # Domyślnie SQLite – plik data/cryptomonitor.db w katalogu głównym.
-    # ProductionConfig nadpisuje na PostgreSQL przez DATABASE_URL w .env.
+    # ProductionConfig nadpisuje na PostgreSQL przez DATABASE_URL w .env
+    # lub os.environ (Railway).
     #
     # Format URI:
     #   sqlite:///   → ścieżka względna od katalogu roboczego
     #   postgresql://user:pass@host:port/dbname
     # Źródło: https://flask-sqlalchemy.readthedocs.io/en/stable/config/
     # ------------------------------------------------------------------
-    SQLALCHEMY_DATABASE_URI = _env.get(
+    SQLALCHEMY_DATABASE_URI = _get(
         "DATABASE_URL",
         f"sqlite:///{DATA_DIR / DATABASE}",
     )
@@ -112,7 +133,7 @@ class Config:
     # Bez klucza działa z niestabilnym limitem ~5–15 req/min.
     # Darmowy klucz: https://www.coingecko.com/pl/api/pricing
     # ------------------------------------------------------------------
-    COINGECKO_API_KEY = _env.get("COINGECKO_API_KEY", "")
+    COINGECKO_API_KEY = _get("COINGECKO_API_KEY", "")
 
     # Czas życia ciasteczka "zapamiętaj mnie" w Flask-Login.
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
@@ -173,7 +194,7 @@ class ProductionConfig(Config):
     """
     Konfiguracja produkcyjna – PostgreSQL.
 
-    Wymaga zmiennej DATABASE_URL w .env:
+    Wymaga zmiennej DATABASE_URL w os.environ (Railway) lub .env:
         DATABASE_URL=postgresql://user:pass@host:5432/crypto_monitor
 
     Wymaga zainstalowanego drivera:
