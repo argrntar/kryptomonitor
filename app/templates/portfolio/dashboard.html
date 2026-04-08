@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}Portfel – Crypto Monitor{% endblock %}
+
+{% block extra_styles %} {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Mój portfel</h1>
+    {% if positions %}
+</div><p style="margin-bottom: 1.5rem;">Stan cen na bieżąco co 5 min.
+    Ostatnia aktualizacja: · {{ positions[0].coin.last_updated | localdt }}
+    {% endif %}
+</p>
+
+<!-- Podsumowanie -->
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="s-label">Saldo USD</div>
+        <div class="s-value">${{ "{:,.2f}".format(balance_usd) }}</div>
+        <div class="s-sub">wolna gotówka</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="s-label">Wartość krypto</div>
+        <div class="s-value">${{ "{:,.2f}".format(summary.total_value) }}</div>
+        <div class="s-sub">wg aktualnych cen</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="s-label">Łączna wartość</div>
+        <div class="s-value">${{ "{:,.2f}".format(balance_usd + summary.total_value) }}</div>
+        <div class="s-sub">saldo + krypto</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="s-label">Zysk / Strata</div>
+        <div class="s-value {% if summary.is_positive %}positive{% else %}negative{% endif %}">
+            {% if summary.is_positive %}+{% endif %}${{ "{:,.2f}".format(summary.total_pnl_usd) }}
+        </div>
+        <div class="s-sub {% if summary.is_positive %}positive{% else %}negative{% endif %}">
+            {% if summary.is_positive %}▲{% else %}▼{% endif %}
+            {{ "%.2f"|format(summary.total_pnl_pct|abs) }}% od zakupu
+        </div>
+    </div>
+</div>
+
+<!-- Pozycje -->
+<div class="section-title" style="display:flex; align-items:center; justify-content:space-between;">
+    <span>Otwarte pozycje</span>
+    {% if positions %}
+    <form id="close-all-form" method="POST" action="{{ url_for('portfolio.close_all') }}">
+        {{ close_form.hidden_tag() }}
+        <button type="button"
+                onclick="document.getElementById('confirm-modal').style.display='flex'"
+                class="btn btn-ghost"
+                style="font-size:12px; border-color:var(--red); color:var(--red);">
+            ✕ Zamknij wszystko
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if positions %}
+<div class="positions-wrap">
+    <table>
+        <thead>
+        <tr>
+            <th>Moneta</th>
+            <th style="text-align:right">Ilość</th>
+            <th style="text-align:right">Śr. zakup</th>
+            <th style="text-align:right">Cena teraz</th>
+            <th style="text-align:right">Wartość</th>
+            <th style="text-align:right">P&L</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in positions %}
+        <tr>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+            <span style="
+              display:inline-block; padding:2px 7px;
+              background:var(--accent-dim); color:var(--accent);
+              border-radius:4px; font-family:var(--font-mono);
+              font-size:11px; font-weight:700;">
+              {{ p.coin.symbol }}
+            </span>
+                    <span style="color:var(--text); font-weight:500;">{{ p.coin.name }}</span>
+                </div>
+            </td>
+            <td style="text-align:right" class="mono">
+                {{ "%.4f"|format(p.holding.amount) }}
+            </td>
+            <td style="text-align:right" class="mono">
+                ${{ "{:,.2f}".format(p.holding.avg_buy_price) }}
+            </td>
+            <td style="text-align:right" class="mono">
+                ${{ "{:,.4f}".format(p.current_price) if p.current_price < 1
+                else "{:,.2f}".format(p.current_price) }}
+            </td>
+            <td style="text-align:right" class="mono">
+                ${{ "{:,.2f}".format(p.current_value) }}
+            </td>
+            <td style="text-align:right">
+          <span class="pnl-badge {% if p.is_positive %}pos{% else %}neg{% endif %}">
+            {% if p.is_positive %}▲{% else %}▼{% endif %}
+            ${{ "{:,.2f}".format(p.pnl_usd|abs) }}
+            ({{ "%.1f"|format(p.pnl_pct|abs) }}%)
+          </span>
+            </td>
+            <td style="text-align:right; width:80px;">
+                <a href="{{ url_for('trade.trade_form', coin_id=p.coin.id) }}"
+                   style="color:var(--text-muted); text-decoration:none; font-size:12px;">
+                    handel →
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        <!-- Wiersz sumy -->
+        <tr class="total-row">
+            <td colspan="4" style="color:var(--text-muted); font-size:12px;">Razem</td>
+            <td style="text-align:right" class="mono">
+                ${{ "{:,.2f}".format(summary.total_value) }}
+            </td>
+            <td style="text-align:right">
+          <span class="pnl-badge {% if summary.is_positive %}pos{% else %}neg{% endif %}">
+            {% if summary.is_positive %}▲{% else %}▼{% endif %}
+            ${{ "{:,.2f}".format(summary.total_pnl_usd|abs) }}
+            ({{ "%.1f"|format(summary.total_pnl_pct|abs) }}%)
+          </span>
+            </td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="positions-wrap">
+    <div class="empty-state">
+        <div style="font-size:2rem;">💼</div>
+        <p>Nie masz jeszcze żadnych kryptowalut.</p>
+        <p><a href="{{ url_for('coins.list_coins') }}">Przejdź do listy kryptowalut</a> i dokonaj pierwszego zakupu.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Historia transakcji -->
+<div class="section-title" style="display:flex; align-items:center; justify-content:space-between;">
+    <span>Historia transakcji (ostatnie 10)</span>
+    {% if total_tx_count > 0 %}
+    <a href="{{ url_for('portfolio.history') }}" style="font-size:12px; color:var(--text-muted);">
+        Zobacz wszystkie transakcje ({{ total_tx_count }}) →
+    </a>
+    {% endif %}
+</div>
+
+{% if transactions %}
+<div class="positions-wrap">
+    <table>
+        <thead>
+        <tr>
+            <th>Data</th>
+            <th>Typ</th>
+            <th>Moneta</th>
+            <th style="text-align:right">Ilość</th>
+            <th style="text-align:right">Cena</th>
+            <th style="text-align:right">Wartość</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for tx in transactions %}
+        {% set coin = coins_map.get(tx.coin_id) %}
+        <tr>
+            <td class="mono" style="font-size:12px; color:var(--text-muted);">
+                {{ tx.created_at | localdt }}
+            </td>
+            <td>
+          <span class="tx-type-{{ tx.transaction_type }}">
+            {{ "KUP" if tx.transaction_type == "buy" else "SPRZEDAJ" }}
+          </span>
+            </td>
+            <td>
+                {% if coin %}
+                <span style="font-family:var(--font-mono); font-size:12px; color:var(--text);">
+              {{ coin.symbol }}
+            </span>
+                <span style="color:var(--text-muted); font-size:12px;">{{ coin.name }}</span>
+                {% else %}—{% endif %}
+            </td>
+            <td style="text-align:right" class="mono">
+                {{ "%.4f"|format(tx.amount) }}
+            </td>
+            <td style="text-align:right" class="mono">
+                ${{ "{:,.2f}".format(tx.price_usd) }}
+            </td>
+            <td style="text-align:right" class="mono
+                {% if tx.transaction_type == 'buy' %}negative{% else %}positive{% endif %}">
+                {% if tx.transaction_type == "buy" %}−{% else %}+{% endif %}
+                ${{ "{:,.2f}".format(tx.total_usd) }}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="positions-wrap">
+    <div class="empty-state">
+        <div style="font-size:2rem;">📋</div>
+        <p>Brak historii transakcji.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal potwierdzenia -->
+<div id="confirm-modal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:2rem; max-width:360px; width:90%;">
+        <p style="margin-bottom:1.5rem;">Sprzedać wszystkie pozycje po aktualnych cenach?</p>
+        <div style="display:flex; gap:1rem; justify-content:flex-end;">
+            <button onclick="document.getElementById('confirm-modal').style.display='none'" class="btn btn-ghost">
+                Anuluj
+            </button>
+            <button onclick="document.getElementById('close-all-form').submit()" class="btn btn-accent"
+                    style="background:var(--red);">Potwierdź
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stopka z attribution -->
+<div style="text-align:center; padding: 2rem 0 0.5rem; color: var(--text-muted); font-size: 11px;">
+    Data provided by <a href="https://www.coingecko.com" style="color:var(--accent);">CoinGecko</a>
+</div>
+{% endblock %}
+

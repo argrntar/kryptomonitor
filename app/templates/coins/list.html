@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Kryptowaluty – Crypto Monitor{% endblock %}
+
+{% block extra_styles %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Rynek kryptowalut</h1>
+    <p>Top 20 według kapitalizacji rynkowej - aktualizacja co 5 min.</p>
+</div>
+
+{% if coins %}
+<div class="coins-table-wrap">
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Nazwa</th>
+            <th class="col-right">Aktualizacja</th>
+            <th class="col-right">Cena (USD)</th>
+            <th class="col-right">Zmiana 24h</th>
+            <th class="col-right">Market Cap</th>
+            <th class="col-right"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for coin in coins %}
+        <tr>
+            <td class="mono col-index">{{ loop.index }}</td>
+
+            <td>
+                <div class="coin-name-cell">
+                    <span class="symbol-badge">{{ coin.symbol }}</span>
+                    <span class="coin-name">{{ coin.name }}</span>
+                </div>
+            </td>
+            <td class="col-right" style="font-size:12px; color:var(--text-muted);">
+                {{ coin.last_updated | localdt if coin.last_updated else "—" }}
+            </td>
+            <td class="col-right">
+          <span class="price-cell">
+            ${{ "{:,.4f}".format(coin.current_price_usd) if coin.current_price_usd < 1
+                else "{:,.2f}".format(coin.current_price_usd) }}
+          </span>
+            </td>
+            <td class="col-right">
+                {% if coin.price_change_24h is not none %}
+                {% if coin.price_change_24h > 0 %}
+                <span class="change-pill pos">▲ {{ "%.2f"|format(coin.price_change_24h) }}%</span>
+                {% elif coin.price_change_24h < 0 %}
+                <span class="change-pill neg">▼ {{ "%.2f"|format(coin.price_change_24h|abs) }}%</span>
+                {% else %}
+                <span class="change-pill neu">{{ "%.2f"|format(coin.price_change_24h) }}%</span>
+                {% endif %}
+                {% else %}
+                <span class="change-pill neu">—</span>
+                {% endif %}
+            </td>
+            <td class="col-right">
+          <span class="market-cap">
+            {% if coin.market_cap %}
+              ${{ "{:,.0f}".format(coin.market_cap / 1_000_000) }}M
+            {% else %}—{% endif %}
+          </span>
+            </td>
+            <td class="col-action">
+                <a href="{{ url_for('coins.detail', coin_id=coin.id) }}" class="status-badge">wykres</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="coins-table-wrap">
+    <div class="empty-state">
+        <div class="empty-icon">📡</div>
+        <p>Brak danych. Sprawdź połączenie z internetem – dane pobierane są z CoinGecko API.</p>
+    </div>
+</div>
+{% endif %}
+<!-- Stopka z attribution -->
+<div style="text-align:center; padding: 2rem 0 0.5rem; color: var(--text-muted); font-size: 11px;">
+    Data provided by <a href="https://www.coingecko.com" style="color:var(--accent);">CoinGecko</a>
+</div>
+{% endblock %}

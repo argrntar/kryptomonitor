@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Historia transakcji – Crypto Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between;">
+    <div>
+        <h1>Historia transakcji</h1>
+        <p>Łączna ilość transakcji: {{ total_count }} </p>
+    </div>
+    <a href="{{ url_for('portfolio.export_csv') }}" class="btn btn-ghost">
+        ↓ Pobierz CSV
+    </a>
+</div>
+
+<div class="positions-wrap">
+    {% if transactions %}
+    <table>
+        <thead>
+        <tr>
+            <th>Data</th>
+            <th>Typ</th>
+            <th>Moneta</th>
+            <th style="text-align:right">Ilość</th>
+            <th style="text-align:right">Cena</th>
+            <th style="text-align:right">Wartość</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for tx in transactions %}
+        {% set coin = coins_map.get(tx.coin_id) %}
+        <tr>
+            <td class="mono" style="font-size:12px; color:var(--text-muted);">
+                {{ tx.created_at | localdt }}
+            </td>
+            <td>
+                    <span class="tx-type-{{ tx.transaction_type }}">
+                        {{ "KUP" if tx.transaction_type == "buy" else "SPRZEDAJ" }}
+                    </span>
+            </td>
+            <td>
+                {% if coin %}
+                <span style="font-family:var(--font-mono); font-size:12px;">{{ coin.symbol }}</span>
+                <span style="color:var(--text-muted); font-size:12px;">{{ coin.name }}</span>
+                {% else %}—{% endif %}
+            </td>
+            <td style="text-align:right" class="mono">{{ "%.4f"|format(tx.amount) }}</td>
+            <td style="text-align:right" class="mono">${{ "{:,.2f}".format(tx.price_usd) }}</td>
+            <td style="text-align:right" class="mono">
+                <span class="{% if tx.transaction_type == 'buy' %}negative{% else %}positive{% endif %}">
+                    {% if tx.transaction_type == "buy" %}−{% else %}+{% endif %}
+                    ${{ "{:,.2f}".format(tx.total_usd) }}
+                </span>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginacja -->
+    {% if pagination.pages > 1 %}
+    <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:1rem; border-top:1px solid var(--border);">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('portfolio.history', page=pagination.prev_num) }}" class="btn btn-ghost"
+           style="padding:4px 12px;">← Poprzednia</a>
+        {% endif %}
+
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        {% if p == pagination.page %}
+        <span class="range-btn active">{{ p }}</span>
+        {% else %}
+        <a href="{{ url_for('portfolio.history', page=p) }}" class="range-btn">{{ p }}</a>
+        {% endif %}
+        {% else %}
+        <span style="color:var(--text-muted);">…</span>
+        {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for('portfolio.history', page=pagination.next_num) }}" class="btn btn-ghost"
+           style="padding:4px 12px;">Następna →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>Brak historii transakcji.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div style="margin-top:1rem;">
+    <a href="{{ url_for('portfolio.dashboard') }}" style="color:var(--text-muted); font-size:13px;">← Powrót do
+        portfela</a>
+</div>
+{% endblock %}

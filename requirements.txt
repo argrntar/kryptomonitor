@@ -1,0 +1,31 @@
+# Framework
+Flask==3.1.3
+
+# Baza danych
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.1.0
+
+# Autentykacja
+Flask-Login==0.6.3
+
+# Formularze + CSRF
+Flask-WTF==1.2.2
+WTForms==3.2.1
+email-validator==2.3.0
+
+# Zmienne środowiskowe (.env)
+python-dotenv==1.2.2
+
+# Zapytania HTTP (CoinGecko API)
+httpx==0.28.1
+
+# Testy
+pytest==9.0.3
+pytest-cov==7.1.0
+
+# Deployment produkcyjny
+gunicorn==25.3.0          # serwer WSGI zastępujący Flask dev server (Railway)
+psycopg2-binary>=2.9.10   # driver PostgreSQL (produkcja zamiast SQLite)
+
+
+

@@ -1,0 +1,51 @@
+# ============================================================
+# Crypto Monitor — .gitignore
+#
+# Bazowany na oficjalnym szablonie GitHub dla Pythona:
+# https://github.com/github/gitignore/blob/main/Python.gitignore
+#
+# Zawiera tylko wpisy adekwatne do tego projektu.
+# ============================================================
+
+# ----- Sekrety i konfiguracja lokalna -----
+# Plik .env zawiera SECRET_KEY i COINGECKO_API_KEY.
+# Nigdy nie powinien trafić do repozytorium.
+# Szablon zmiennych: .env.example (jest w repo).
+.env
+
+# ----- Baza danych -----
+# SQLite tworzona lokalnie przez: flask db upgrade
+# Każdy user generuje własną bazę z migracji.
+data/
+
+# ----- Python: pliki skompilowane -----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ----- Środowisko wirtualne -----
+venv/
+.venv/
+env/
+ENV/
+
+# ----- Testy i pokrycie kodu -----
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# ----- Flask -----
+instance/
+.webassets-cache
+
+# ----- IDE / edytory -----
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store

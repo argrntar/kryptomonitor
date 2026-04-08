@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Rejestracja – Crypto Monitor{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h4>Utwórz konto</h4>
+
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control") }}
+                {% for error in form.username.errors %}
+                <div class="form-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control") }}
+                {% for error in form.email.errors %}
+                <div class="form-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control") }}
+                {% for error in form.password.errors %}
+                <div class="form-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password_confirm.label(class="form-label") }}
+                {{ form.password_confirm(class="form-control") }}
+                {% for error in form.password_confirm.errors %}
+                <div class="form-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class="btn btn-accent", style="width: 100%; margin-top: 0.5rem;") }}
+        </form>
+
+        <hr/>
+        <div class="auth-footer">
+            Masz już konto?
+            <a href="{{ url_for('auth.login') }}">Zaloguj się</a>
+        </div>
+    </div>
+    <p class="auth-note">Po rejestracji otrzymasz <strong>$10 000</strong> na start.</p>
+</div>
+{% endblock %}

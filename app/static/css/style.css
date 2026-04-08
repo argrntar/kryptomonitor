@@ -1,0 +1,796 @@
+/* ============================================================
+   Crypto Monitor – style globalne
+   Dark theme z akcentem #00c896 (zielony)
+   ============================================================ */
+
+:root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #666;
+    --accent: #00c896;
+    --accent-dim: rgba(0, 200, 150, 0.12);
+    --red: #ff4d4d;
+    --red-dim: rgba(255, 77, 77, 0.12);
+    --font-mono: 'Space Mono', 'Courier New', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    opacity: 0.8;
+}
+
+/* ── Navbar ── */
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-left, .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.brand {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text) !important;
+}
+
+.brand span {
+    color: var(--accent);
+}
+
+nav a {
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: color 0.15s;
+}
+
+nav a:hover {
+    color: var(--text);
+}
+
+.nav-user {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.nav-balance {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 13px;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+}
+
+.btn:hover {
+    opacity: 0.85;
+}
+
+.btn-accent {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-buy {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-sell {
+    background: var(--red);
+    color: #fff;
+    font-weight: 600;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* ── Main ── */
+main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* ── Alerts ── */
+.alerts {
+    margin-bottom: 1.5rem;
+}
+
+.alert {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid;
+}
+
+.alert-success {
+    background: rgba(0, 200, 150, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.alert-danger {
+    background: rgba(255, 77, 77, 0.1);
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.alert-info {
+    background: rgba(100, 160, 255, 0.1);
+    border-color: #64a0ff;
+    color: #64a0ff;
+}
+
+.alert-warning {
+    background: rgba(255, 200, 0, 0.1);
+    border-color: #ffc800;
+    color: #ffc800;
+}
+
+/* ── Page header ── */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.page-header p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+/* ── Tables ── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.col-right {
+    text-align: right;
+}
+
+.col-action {
+    text-align: right;
+    width: 80px;
+}
+
+.col-index {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.mono {
+    font-family: var(--font-mono);
+}
+
+/* ── Coins list ── */
+.coins-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.coin-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.symbol-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.coin-name {
+    font-weight: 500;
+}
+
+.price-cell {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+.change-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.change-pill.pos {
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+.change-pill.neg {
+    background: var(--red-dim);
+    color: var(--red);
+}
+
+.change-pill.neu {
+    color: var(--text-muted);
+}
+
+.market-cap {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.status-badge {
+    color: var(--accent);
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Coin detail ── */
+.back-link-wrap {
+    margin-bottom: 1rem;
+}
+
+.back-link {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.holding-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+}
+
+.coin-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.coin-hero-left h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+
+.symbol-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: 6px;
+}
+
+.price-big {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+
+.price-change-big {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.price-change-big.positive {
+    color: var(--accent);
+}
+
+.price-change-big.negative {
+    color: var(--red);
+}
+
+.positive {
+    color: var(--accent);
+}
+
+.negative {
+    color: var(--red);
+}
+
+.btn-hero {
+    align-self: center;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.meta-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.meta-item .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.meta-item .value {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.meta-item .value--sm {
+    font-size: 13px;
+}
+
+.chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.chart-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    height: 280px;
+}
+
+.no-history {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* ── Range buttons ── */
+.range-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.range-btn {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+}
+
+.range-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.range-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+/* ── Portfolio dashboard ── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+}
+
+.s-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.s-value {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+}
+
+.s-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.s-sub.positive {
+    color: var(--accent);
+}
+
+.s-sub.negative {
+    color: var(--red);
+}
+
+.section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 1.5rem 0 0.8rem;
+}
+
+.positions-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+}
+
+.pnl-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.pnl-badge.pos {
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+.pnl-badge.neg {
+    background: var(--red-dim);
+    color: var(--red);
+}
+
+.total-row td {
+    background: var(--surface2);
+    font-weight: 600;
+}
+
+.tx-type-buy {
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tx-type-sell {
+    background: var(--red);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ── Trade form ── */
+.coin-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.coin-summary .name {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.coin-summary .holding-info {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.coin-summary .price {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.trade-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.trade-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.trade-card.buy {
+    border: 1px solid var(--accent);
+}
+
+.trade-card.sell {
+    border: 1px solid var(--red);
+}
+
+.trade-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.trade-card.buy h3 {
+    color: var(--accent);
+}
+
+.trade-card.sell h3 {
+    color: var(--red);
+}
+
+.balance-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.balance-info span {
+    font-family: var(--font-mono);
+    color: var(--accent);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.form-control:focus {
+    border-color: var(--accent);
+}
+
+.form-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.form-error {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 4px;
+}
+
+.cost-preview {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--font-mono);
+}
+
+/* ── Auth forms ── */
+.auth-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.auth-card h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.auth-card .form-group {
+    margin-bottom: 1rem;
+}
+
+.auth-card hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.2rem 0;
+}
+
+.auth-footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.auth-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 0.8rem;
+}
+
+.remember-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+/* ── Nav active state ── */
+nav a.nav-active {
+    color: var(--accent);
+    font-weight: 600;
+}

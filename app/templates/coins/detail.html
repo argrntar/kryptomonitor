@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ coin.name }} – Crypto Monitor{% endblock %}
+
+{% block extra_styles %}{% endblock %}
+
+{% block content %}
+
+<div class="back-link-wrap">
+    <a href="{{ url_for('coins.list_coins') }}" class="back-link">← Powrót do listy kryptowalut</a>
+</div>
+
+{% if current_user.is_authenticated and holding and holding.amount > 0 %}
+<div class="holding-bar">
+    <div class="info">
+        Posiadasz <strong>{{ "%.4f"|format(holding.amount) }} {{ coin.symbol }}</strong>
+        · śr. cena zakupu
+        <strong>${{ "%.2f"|format(holding.avg_buy_price) }}</strong>
+    </div>
+    <a href="{{ url_for('trade.trade_form', coin_id=coin.id) }}" class="btn btn-accent">
+        Kup / Sprzedaj
+    </a>
+</div>
+{% endif %}
+
+<div class="coin-hero">
+    <div class="coin-hero-left">
+        <h2>{{ coin.name }} <span class="symbol-tag">{{ coin.symbol }}</span></h2>
+        <div class="price-big">
+            ${% if coin.current_price_usd is not none %}
+            {{ "{:,.4f}".format(coin.current_price_usd) if coin.current_price_usd < 1
+            else "{:,.2f}".format(coin.current_price_usd) }}
+            {% else %}—{% endif %}
+        </div>
+        {% if coin.price_change_24h is not none %}
+        <div class="price-change-big {% if coin.price_change_24h >= 0 %}positive{% else %}negative{% endif %}">
+            {% if coin.price_change_24h >= 0 %}▲{% else %}▼{% endif %}
+            {{ "%.2f"|format(coin.price_change_24h|abs) }}% (24h)
+        </div>
+        {% endif %}
+    </div>
+
+    {% if current_user.is_authenticated and (not holding or holding.amount == 0) %}
+    <a href="{{ url_for('trade.trade_form', coin_id=coin.id) }}" class="btn btn-accent btn-hero">
+        Kup / Sprzedaj
+    </a>
+    {% elif not current_user.is_authenticated %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-hero">
+        Zaloguj się, żeby handlować
+    </a>
+    {% endif %}
+</div>
+
+<div class="meta-grid">
+    <div class="meta-item">
+        <div class="label">Market Cap</div>
+        <div class="value">
+            {% if coin.market_cap %}
+            ${{ "{:,.0f}".format(coin.market_cap / 1_000_000) }}M
+            {% else %}—{% endif %}
+        </div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Ostatnia aktualizacja</div>
+        <div class="value value--sm">{{ coin.last_updated | localdt }}</div>
+    </div>
+    <div class="meta-item">
+        <div class="label">Punktów w historii</div>
+        <div class="value"><span id="history-count">{{ chart_data|length }}</span></div>
+    </div>
+</div>
+
+<div class="chart-card">
+    <div class="chart-header">
+        <div class="chart-title">Historia ceny</div>
+        <div class="range-buttons">
+            <button class="range-btn" data-range="24h">24H</button>
+            <button class="range-btn" data-range="7d">7D</button>
+            <button class="range-btn active" data-range="30d">30D</button>
+        </div>
+    </div>
+
+    <div class="chart-wrapper">
+        <div id="app-data" data-coin-id="{{ coin.id }}"></div>
+        <canvas id="priceChart"></canvas>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/price_chart.js') }}"></script>
+{% endblock %}

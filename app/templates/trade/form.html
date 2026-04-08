@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Handel – {{ coin.name }} – Crypto Monitor{% endblock %}
+
+{% block extra_styles %} {% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{{ url_for('coins.detail', coin_id=coin.id) }}"
+       style="color: var(--text-muted); text-decoration: none; font-size: 13px;">
+        ← Powrót do {{ coin.name }}
+    </a>
+</div>
+
+<!-- Podsumowanie monety -->
+<div class="coin-summary">
+    <div>
+        <div class="name">{{ coin.name }} <span
+                style="color:var(--text-muted); font-size:13px;">{{ coin.symbol }}</span></div>
+        {% if holding and holding.amount > 0 %}
+        <div class="holding-info">
+            Posiadasz: {{ "%.4f"|format(holding.amount) }} {{ coin.symbol }}
+            · śr. zakup: ${{ "%.2f"|format(holding.avg_buy_price) }}
+        </div>
+        {% else %}
+        <div class="holding-info">Nie posiadasz tej kryptowaluty</div>
+        {% endif %}
+    </div>
+    <div class="price">
+        ${{ "{:,.4f}".format(coin.current_price_usd) if coin.current_price_usd < 1
+        else "{:,.2f}".format(coin.current_price_usd) }}
+    </div>
+</div>
+
+<!-- Formularze -->
+<div class="trade-layout">
+
+    <!-- KUP -->
+    <div class="trade-card buy">
+        <h3>▲ KUP {{ coin.symbol }}</h3>
+        <div class="balance-info">
+            Saldo: <span>${{ "%.2f"|format(current_user.balance_usd) }}</span>
+        </div>
+        <form method="POST" action="{{ url_for('trade.buy', coin_id=coin.id) }}" novalidate>
+            {{ buy_form.hidden_tag() }}
+            {{ buy_form.coin_id(value=coin.id) }}
+            <div class="form-group">
+                {{ buy_form.amount.label }}
+                {{ buy_form.amount(
+                class="form-control",
+                placeholder="np. 0.0001",
+                id="buy-amount",
+                step="0.0001",
+                inputmode="decimal",
+                autocomplete="off"
+                ) }}
+                {% for error in buy_form.amount.errors %}
+                <p class="form-error">{{ error }}</p>
+                {% endfor %}
+                <div class="cost-preview" id="buy-cost-preview"></div>
+            </div>
+            <button type="submit" class="btn btn-buy">Kup {{ coin.symbol }}</button>
+        </form>
+    </div>
+
+    <!-- SPRZEDAJ -->
+    <div class="trade-card sell">
+        <h3>▼ SPRZEDAJ {{ coin.symbol }}</h3>
+        {% if holding and holding.amount > 0 %}
+        <div class="balance-info">
+            Dostępne: <span style="color:var(--red); font-family:var(--font-mono);">
+          {{ "%.4f"|format(holding.amount) }} {{ coin.symbol }}
+        </span>
+        </div>
+        {% else %}
+        <div class="balance-info" style="color: var(--text-muted);">Brak {{ coin.symbol }} w portfelu</div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('trade.sell', coin_id=coin.id) }}" novalidate>
+            {{ sell_form.hidden_tag() }}
+            {{ sell_form.coin_id(value=coin.id) }}
+            <div class="form-group">
+                {{ sell_form.amount.label }}
+                {{ sell_form.amount(
+                class="form-control",
+                placeholder="np. 0.0001",
+                id="sell-amount",
+                step="0.0001",
+                inputmode="decimal",
+                autocomplete="off",
+                **{"data-max": holding.amount if holding else 0}
+                ) }}
+                {% for error in sell_form.amount.errors %}
+                <p class="form-error">{{ error }}</p>
+                {% endfor %}
+                <div class="cost-preview" id="sell-value-preview"></div>
+            </div>
+            <button type="submit" class="btn btn-sell"
+                    {% if not holding or holding.amount== 0 %}disabled style="opacity:0.4; cursor:not-allowed;" {% endif
+                    %}>
+                Sprzedaj {{ coin.symbol }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div style="margin-bottom: 1rem;">
+    <a href="{{ url_for('portfolio.dashboard') }}" class="back-link"
+       style="margin-left: 1rem; margin-top: 1rem; display: inline-block;">← Powrót do portfela</a>
+</div>
+
+<div id="trade-data" data-price="{{ coin.current_price_usd }}"></div>
+
+<script>
+    const price = parseFloat(document.getElementById("trade-data").dataset.price);
+    const buyInput = document.getElementById("buy-amount");
+    const buyPreview = document.getElementById("buy-cost-preview");
+    const sellInput = document.getElementById("sell-amount");
+    const sellPreview = document.getElementById("sell-value-preview");
+
+    buyInput.addEventListener("input", () => {
+        const amt = parseFloat(buyInput.value.replace(",", "."));
+        if (!isNaN(amt) && amt > 0) {
+            const cost = amt * price;
+            buyPreview.textContent = `≈ $${cost.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+        } else {
+            buyPreview.textContent = "";
+        }
+    });
+
+    sellInput.addEventListener("input", () => {
+        const amt = parseFloat(sellInput.value.replace(",", "."));
+        if (!isNaN(amt) && amt > 0) {
+            const value = amt * price;
+            sellPreview.textContent = `≈ $${value.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+        } else {
+            sellPreview.textContent = "";
+        }
+    });
+</script>
+{% endblock %}
