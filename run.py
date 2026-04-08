@@ -56,7 +56,7 @@ from dotenv import load_dotenv
 # Wczytaj .env z katalogu głównego projektu PRZED importem aplikacji.
 # Path(__file__).resolve().parent → katalog gdzie leży run.py = katalog główny.
 # Jeśli .env nie istnieje – load_dotenv() nie robi nic, bez błędu.
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 # Import po load_dotenv() – config.py może teraz odczytać zmienne środowiskowe
 from app import create_app  # noqa: E402
