@@ -76,7 +76,7 @@
                     zostaną trwale usunięte.
                 </p>
                 <button type="button"
-                        onclick="document.getElementById('delete-modal').style.display='flex'"
+                        id="open-delete-modal"
                         class="btn btn-ghost"
                         style="border-color: var(--red); color: var(--red);">
                     Usuń konto
@@ -110,7 +110,7 @@
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end;">
                 <button type="button"
-                        onclick="document.getElementById('delete-modal').style.display='none'"
+                        id="close-delete-modal"
                         class="btn btn-ghost">
                     Anuluj
                 </button>
@@ -123,5 +123,7 @@
         </form>
     </div>
 </div>
-
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
 {% endblock %}
