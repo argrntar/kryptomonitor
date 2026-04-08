@@ -1,1 +1,1 @@
-web: flask db upgrade && gunicorn "run:app"
+web: FLASK_CONFIG=production flask db upgrade && gunicorn "run:app"
