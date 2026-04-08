@@ -117,7 +117,7 @@ def profile():
         )
         flash(message, "success" if success else "danger")
         if success:
-            return redirect(url_for("auth.profile"))
+            return redirect(url_for("portfolio.dashboard"))
 
     return render_template("auth/profile.html", form=form, delete_form=FlaskForm())
 
@@ -150,4 +150,4 @@ def delete_account():
 
     logout_user()
     flash("Konto zostało trwale usunięte.", "info")
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("coins.list_coins"))
