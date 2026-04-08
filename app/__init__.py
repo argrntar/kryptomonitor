@@ -35,7 +35,7 @@ from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from flask import Flask
-
+from whitenoise import WhiteNoise
 from app.config import config
 from app.extensions import db, migrate, login_manager
 
@@ -59,6 +59,15 @@ def create_app(config_name: str = "default") -> Flask:
     """
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    # ------------------------------------------------------------------
+    # WhiteNoise – serwowanie plików statycznych z cache nagłówkami.
+    # Eliminuje FOUC (Flash of Unstyled Content) przez agresywne
+    # cache'owanie CSS/JS w przeglądarce. Pierwszy load pobiera pliki,
+    # każdy kolejny serwuje z cache przeglądarki (błyskawicznie).
+    # Źródło: https://whitenoise.readthedocs.io/
+    # ------------------------------------------------------------------
+    app.wsgi_app = WhiteNoise(app.wsgi_app, root="app/static/", prefix="static")
 
     # ------------------------------------------------------------------
     # Krok 1 – Extensions
