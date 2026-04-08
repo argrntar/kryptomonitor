@@ -35,9 +35,9 @@ from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from flask import Flask
-from whitenoise import WhiteNoise
 from app.config import config
 from app.extensions import db, migrate, login_manager
+from flask_talisman import Talisman
 
 WARSAW = ZoneInfo("Europe/Warsaw")
 
@@ -61,13 +61,33 @@ def create_app(config_name: str = "default") -> Flask:
     app.config.from_object(config[config_name])
 
     # ------------------------------------------------------------------
-    # WhiteNoise – serwowanie plików statycznych z cache nagłówkami.
-    # Eliminuje FOUC (Flash of Unstyled Content) przez agresywne
-    # cache'owanie CSS/JS w przeglądarce. Pierwszy load pobiera pliki,
-    # każdy kolejny serwuje z cache przeglądarki (błyskawicznie).
-    # Źródło: https://whitenoise.readthedocs.io/
+    # Talisman – nagłówki bezpieczeństwa HTTP.
+    # force_https=False – Railway obsługuje HTTPS przed aplikacją (reverse proxy).
+    # CSP skonfigurowane pod zasoby aplikacji:
+    #   - fonts.googleapis.com / fonts.gstatic.com → Google Fonts
+    #   - cdn.jsdelivr.net → Chart.js
+    #   - 'unsafe-inline' w style-src → style="" w znacznikach HTML (Jinja2)
+    # Źródło: https://github.com/GoogleCloudPlatform/flask-talisman
     # ------------------------------------------------------------------
-    app.wsgi_app = WhiteNoise(app.wsgi_app, root="app/static/", prefix="static")
+    csp = {
+        'default-src': "'self'",
+        'script-src': [
+            "'self'",
+            'cdn.jsdelivr.net',
+        ],
+        'style-src': [
+            "'self'",
+            "'unsafe-inline'",
+            'fonts.googleapis.com',
+        ],
+        'font-src': [
+            "'self'",
+            'fonts.gstatic.com',
+        ],
+        'img-src': "'self'",
+        'connect-src': "'self'",
+    }
+    Talisman(app, force_https=False, content_security_policy=csp)
 
     # ------------------------------------------------------------------
     # Krok 1 – Extensions

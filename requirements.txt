@@ -26,7 +26,6 @@ pytest-cov==7.1.0
 # Deployment produkcyjny
 gunicorn==25.3.0          # serwer WSGI zastępujący Flask dev server (Railway)
 psycopg2-binary>=2.9.10   # driver PostgreSQL (produkcja zamiast SQLite)
-whitenoise==6.8.0         # serwowanie plików statycznych z cache (produkcja)
-
+flask-talisman==1.1.0     # nagłówki bezpieczeństwa HTTP (CSP, HSTS, clickjacking)
 
 
