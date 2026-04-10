@@ -16,6 +16,16 @@ Konwencja commit:
     Repozytorium używa wyłącznie flush() – staging bez zatwierdzenia.
     Dzięki temu cała operacja (np. upsert monety + dodanie PriceHistory)
     jest atomowa: albo wszystko się zapisuje, albo rollback cofa wszystko.
+
+Throttling update_prices():
+    Poprzednia implementacja używała zmiennej modułu _last_update (datetime).
+    Problem: gunicorn uruchamia wiele workerów – każdy ma własną pamięć
+    i własną kopię _last_update. Przy 4 workerach CoinGecko było odpytywane
+    4x częściej niż zakładano, co mogło przekroczyć limit API.
+
+    Obecna implementacja sprawdza last_updated bezpośrednio z bazy przez
+    coin_repository.find_most_recently_updated(). Wszystkie workery czytają
+    ten sam rekord – throttling działa globalnie dla całego procesu gunicorn.
 """
 from datetime import datetime, timezone, timedelta
 
@@ -26,19 +36,18 @@ from app.models.coin import Coin
 from app.repositories import coin_repository, price_history_repository
 
 # ---------------------------------------------------------------------------
-# Throttling – stan modułu
+# Throttling – interwały
 # ---------------------------------------------------------------------------
 
 _UPDATE_INTERVAL = timedelta(minutes=5)
 _ENSURE_INTERVAL = timedelta(minutes=10)
 _CLEANUP_INTERVAL = timedelta(hours=24)
 
-_last_update: datetime | None = None
-
 # Klucz: (coin_id, days) → kiedy ostatnio sprawdzano historię
+# Uwaga: te słowniki są per-worker (pamięć procesu). Przy wielu workerach
+# mogą spowodować dodatkowe zapytania do CoinGecko o historię lub dodatkowy
+# DELETE przy czyszczeniu – konsekwencje niegroźne dla działania aplikacji.
 _ensure_checked: dict[tuple[int, int], datetime] = {}
-
-# Klucz: coin_id → kiedy ostatnio czyszczono historię
 _last_cleanup: dict[int, datetime] = {}
 
 
@@ -50,7 +59,10 @@ def update_prices() -> None:
     """
     Pobiera aktualne ceny z CoinGecko i zapisuje do bazy.
 
-    Throttling: odpytuje API max raz na _UPDATE_INTERVAL (5 min).
+    Throttling przez bazę danych: odpytuje API max raz na _UPDATE_INTERVAL
+    (5 min). Sprawdza last_updated ostatnio zaktualizowanej monety zamiast
+    zmiennej modułu – działa poprawnie z wieloma workerami gunicorn.
+
     Przy każdym udanym pobraniu:
         - upsert monet (create przez repo jeśli nowa, update pól jeśli istnieje)
         - stage_point dla każdej monety (PriceHistory bez commit)
@@ -58,11 +70,17 @@ def update_prices() -> None:
 
     Wywoływana przy każdym GET /coins/.
     """
-    global _last_update
-
     now = datetime.now(timezone.utc)
-    if _last_update and (now - _last_update) < _UPDATE_INTERVAL:
-        return
+
+    # Throttling przez bazę – działa z wieloma workerami gunicorn.
+    # Każdy worker czyta ten sam rekord zamiast własnej zmiennej w pamięci.
+    newest_coin = coin_repository.find_most_recently_updated()
+    if newest_coin and newest_coin.last_updated:
+        last = newest_coin.last_updated
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        if (now - last) < _UPDATE_INTERVAL:
+            return
 
     try:
         raw_coins = coingecko_client.get_top_coins()
@@ -81,7 +99,7 @@ def update_prices() -> None:
         # Upsert – repo tworzy nową monetę lub zwracamy istniejącą
         coin = coin_repository.find_by_coingecko_id(coingecko_id)
         if coin is None:
-            coin = coin_repository.create(coingecko_id)  # flush w repo, commit tu
+            coin = coin_repository.create(coingecko_id)
 
         # Aktualizacja pól – SQLAlchemy śledzi zmiany automatycznie
         coin.symbol = raw.get("symbol", "").upper()
@@ -95,7 +113,6 @@ def update_prices() -> None:
         price_history_repository.stage_point(coin, price, now)
 
     db.session.commit()  # jeden commit dla wszystkich monet i historii
-    _last_update = now
 
 
 def get_all_coins() -> list[Coin]:
@@ -158,23 +175,15 @@ def ensure_history(coin: Coin, days: int) -> None:
         if oldest_dt.tzinfo is None:
             oldest_dt = oldest_dt.replace(tzinfo=timezone.utc)
         if oldest_dt <= cutoff:
-            _ensure_checked[key] = now  # dane wystarczające – zapamiętaj
+            _ensure_checked[key] = now
             return
 
-    # Brakuje danych – pobierz z CoinGecko
     try:
         raw_history = get_coin_history(coin.coingecko_id, days=days)
     except Exception:
         return  # błąd API – pokazujemy co mamy w bazie
 
-    # Jeśli dotarliśmy tutaj early return już nie zadziałał – czyli:
-    #   a) oldest is None → baza pusta
-    #   b) oldest_dt > cutoff → mamy tylko świeże punkty, brakuje historycznych
-    # W OBU przypadkach chcemy dodać CAŁĄ historię z API → cutoff_ts = 0.0
-    # Poprzedni kod ustawiał cutoff_ts = oldest_dt.timestamp() gdy oldest_dt > cutoff
-    # co powodowało pominięcie CAŁEJ historii (wszystkie punkty API były starsze).
     cutoff_ts = 0.0
-
     added = price_history_repository.stage_bulk(coin, raw_history, cutoff_ts)
 
     if added:
@@ -201,12 +210,10 @@ def cleanup_coin_history(coin_id: int, days: int = 30) -> None:
     last = _last_cleanup.get(coin_id)
 
     if last and (now - last) < _CLEANUP_INTERVAL:
-        return  # czyszczono niedawno – pomijamy
+        return
 
     cutoff = now - timedelta(days=days)
     price_history_repository.delete_older_than_for_coin(coin_id, cutoff)
     db.session.commit()
 
     _last_cleanup[coin_id] = now
-
-

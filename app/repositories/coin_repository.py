@@ -7,7 +7,8 @@ Odpowiedzialności:
     - brak logiki biznesowej – tylko zapytania do bazy
 
 Używane przez:
-    - coin_service.py        (update_prices, get_all_coins, get_coin_by_id, ensure_history)
+    - coin_service.py        (update_prices, get_all_coins, get_coin_by_id,
+                              ensure_history, cleanup_coin_history)
     - portfolio_routes.py    (find_by_ids – dashboard, historia, eksport CSV)
     - portfolio_service.py   (find_by_id – close_all)
 
@@ -91,6 +92,22 @@ def find_by_ids(coin_ids: list[int]) -> list[Coin]:
     return db.session.execute(stmt).scalars().all()
 
 
+def find_most_recently_updated() -> Coin | None:
+    """
+    Zwraca monetę z najnowszym last_updated.
+
+    Używana przez coin_service.update_prices() do throttlingu opartego
+    na bazie danych zamiast zmiennej modułu w pamięci procesu. Dzięki temu
+    throttling działa poprawnie z wieloma workerami gunicorn – wszystkie
+    workery czytają ten sam rekord zamiast własnych kopii zmiennej _last_update.
+
+    Returns:
+        Obiekt Coin z najnowszym last_updated lub None jeśli baza pusta.
+    """
+    stmt = select(Coin).order_by(Coin.last_updated.desc().nullslast()).limit(1)
+    return db.session.execute(stmt).scalar_one_or_none()
+
+
 def create(coingecko_id: str) -> Coin:
     """
     Tworzy nową monetę i dodaje ją do sesji bez flush/commit.
@@ -112,4 +129,4 @@ def create(coingecko_id: str) -> Coin:
     """
     coin = Coin(coingecko_id=coingecko_id)
     db.session.add(coin)
-    return coin  # serwis ustawia symbol/name/price przed commit()
+    return coin
