@@ -69,6 +69,10 @@
 </main>
 
 {% block scripts %}{% endblock %}
-<script>document.body.style.visibility='visible'</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.style.visibility = 'visible';
+});
+</script>
 </body>
 </html>
