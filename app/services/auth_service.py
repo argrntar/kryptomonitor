@@ -27,6 +27,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 from app.models.user import User
 from app.repositories import user_repository
+from app.repositories import portfolio_repository
+from app.repositories import coin_repository
 
 
 def register(username: str, email: str, password: str) -> User:
@@ -141,12 +143,10 @@ def delete_account(user: User, password: str) -> tuple[bool, str]:
         return False, "Nieprawidłowe hasło. Konto nie zostało usunięte."
 
     # Sprawdź czy user ma otwarte pozycje (amount > 0)
-    from app.repositories import portfolio_repository
     holdings = portfolio_repository.find_by_user(user.id)
     open_positions = [h for h in holdings if h.amount > 0]
 
     if open_positions:
-        from app.repositories import coin_repository
         coin_ids = [h.coin_id for h in open_positions]
         coins = coin_repository.find_by_ids(coin_ids)
         coins_map = {c.id: c for c in coins}
