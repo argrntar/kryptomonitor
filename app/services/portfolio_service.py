@@ -25,6 +25,10 @@ Obliczenia finansowe:
         Decimal("0.1") + Decimal("0.2") = Decimal("0.3")  (Decimal)
     Decimal to standard w aplikacjach finansowych.
     Dokumentacja: https://docs.python.org/3/library/decimal.html
+
+    Uwaga: coin.current_price_usd pozostaje float (dane z zewnętrznego API,
+    tylko wyświetlane). Wszędzie gdzie cena wchodzi w obliczenia finansowe
+    jest konwertowana przez _to_decimal().
 """
 from decimal import Decimal, ROUND_UP, ROUND_DOWN
 from datetime import datetime, timezone
@@ -110,13 +114,14 @@ def _stage_buy(
     holding.amount = new_total
     holding.updated_at = datetime.now(timezone.utc)
 
+    # Kolumny transaction są Numeric – przekazujemy Decimal bezpośrednio
     return transaction_repository.stage(
         user_id=user.id,
         coin_id=coin.id,
         transaction_type="buy",
-        amount=float(amount),
-        price_usd=float(price),
-        total_usd=float(total_cost),
+        amount=amount,
+        price_usd=price,
+        total_usd=total_cost,
     )
 
 
@@ -141,13 +146,14 @@ def _stage_sell(
     holding.amount = Decimal("0") if remaining < MIN_DUST else remaining
     holding.updated_at = datetime.now(timezone.utc)
 
+    # Kolumny transaction są Numeric – przekazujemy Decimal bezpośrednio
     return transaction_repository.stage(
         user_id=user.id,
         coin_id=holding.coin_id,
         transaction_type="sell",
-        amount=float(amount),
-        price_usd=float(price),
-        total_usd=float(total_value),
+        amount=amount,
+        price_usd=price,
+        total_usd=total_value,
     )
 
 
@@ -252,7 +258,7 @@ def close_all(user: User) -> tuple[int, int]:
     skipped = 0
 
     for holding in holdings:
-        if holding.amount <= 0:
+        if _to_decimal(holding.amount) <= Decimal("0"):
             continue
 
         coin = coin_repository.find_by_id(holding.coin_id)
@@ -282,32 +288,43 @@ def close_all(user: User) -> tuple[int, int]:
 def build_positions(
         holdings: list[Portfolio],
         coins_map: dict[int, Coin],
-) -> tuple[list[dict], float, float]:
+) -> tuple[list[dict], Decimal, Decimal]:
     """
     Buduje listę pozycji z P&L na podstawie holdings i aktualnych cen.
 
     Należy do serwisu – to logika biznesowa (obliczenia finansowe).
     Routes delegują tu obliczenia i przekazują wynik do szablonu.
 
+    coin.current_price_usd jest float (dane z API) – konwertowany przez
+    _to_decimal() przed każdym obliczeniem finansowym.
+
     Returns:
-        Tuple (positions, total_value, total_cost).
+        Tuple (positions, total_value, total_cost) – wartości jako Decimal.
     """
     positions = []
-    total_value = 0.0
-    total_cost = 0.0
+    total_value = Decimal("0")
+    total_cost = Decimal("0")
 
     for holding in holdings:
-        if holding.amount <= 0:
+        if _to_decimal(holding.amount) <= Decimal("0"):
             continue
         coin = coins_map.get(holding.coin_id)
         if coin is None:
             continue
 
-        current_price = coin.current_price_usd or holding.avg_buy_price
-        current_value = holding.amount * current_price
-        cost_basis = holding.amount * holding.avg_buy_price
+        # coin.current_price_usd to float – konwertujemy przed obliczeniami
+        if coin.current_price_usd is not None:
+            current_price = _to_decimal(coin.current_price_usd)
+        else:
+            current_price = _to_decimal(holding.avg_buy_price)
+
+        amount = _to_decimal(holding.amount)
+        avg_buy = _to_decimal(holding.avg_buy_price)
+
+        current_value = amount * current_price
+        cost_basis = amount * avg_buy
         pnl_usd = current_value - cost_basis
-        pnl_pct = (pnl_usd / cost_basis * 100) if cost_basis > 0 else 0.0
+        pnl_pct = (pnl_usd / cost_basis * 100) if cost_basis > Decimal("0") else Decimal("0")
 
         positions.append({
             "holding": holding,
@@ -316,7 +333,7 @@ def build_positions(
             "current_value": current_value,
             "pnl_usd": pnl_usd,
             "pnl_pct": pnl_pct,
-            "is_positive": pnl_usd >= 0,
+            "is_positive": pnl_usd >= Decimal("0"),
         })
 
         total_value += current_value
@@ -375,13 +392,13 @@ def get_dashboard_data(user_id: int) -> dict:
     positions, total_value, total_cost = build_positions(holdings, coins_map)
 
     total_pnl_usd = total_value - total_cost
-    total_pnl_pct = (total_pnl_usd / total_cost * 100) if total_cost > 0 else 0.0
+    total_pnl_pct = (total_pnl_usd / total_cost * 100) if total_cost > Decimal("0") else Decimal("0")
 
     summary = {
         "total_value": total_value,
         "total_pnl_usd": total_pnl_usd,
         "total_pnl_pct": total_pnl_pct,
-        "is_positive": total_pnl_usd >= 0,
+        "is_positive": total_pnl_usd >= Decimal("0"),
     }
 
     transactions = transaction_repository.find_recent_by_user(user_id)
