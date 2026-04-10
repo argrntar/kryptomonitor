@@ -28,7 +28,7 @@ class PriceHistory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     coin_id = db.Column(db.Integer, db.ForeignKey("coins.id"), nullable=False)
-    price_usd = db.Column(db.Float, nullable=False)
+    price_usd = db.Column(db.Numeric(18, 8), nullable=False)
     recorded_at = db.Column(
         db.DateTime,
         nullable=False,

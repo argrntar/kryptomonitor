@@ -15,7 +15,7 @@ Indeksowanie:
     Dokumentacja: https://docs.sqlalchemy.org/en/20/core/constraints.html
 """
 from datetime import datetime, timezone
-
+from decimal import Decimal
 from app.extensions import db
 
 
@@ -25,8 +25,8 @@ class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     coin_id = db.Column(db.Integer, db.ForeignKey("coins.id"), nullable=False)
-    amount = db.Column(db.Float, nullable=False, default=0.0)
-    avg_buy_price = db.Column(db.Float, nullable=False, default=0.0)
+    amount = db.Column(db.Numeric(18, 8), nullable=False, default=Decimal("0"))
+    avg_buy_price = db.Column(db.Numeric(18, 8), nullable=False, default=Decimal("0"))
     updated_at = db.Column(
         db.DateTime,
         nullable=False,

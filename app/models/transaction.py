@@ -40,9 +40,9 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     coin_id = db.Column(db.Integer, db.ForeignKey("coins.id"), nullable=False)
     transaction_type = db.Column(db.String(4), nullable=False)  # "buy" | "sell"
-    amount = db.Column(db.Float, nullable=False)
-    price_usd = db.Column(db.Float, nullable=False)
-    total_usd = db.Column(db.Float, nullable=False)
+    amount = db.Column(db.Numeric(18, 8), nullable=False)
+    price_usd = db.Column(db.Numeric(18, 8), nullable=False)
+    total_usd = db.Column(db.Numeric(18, 2), nullable=False)
     created_at = db.Column(
         db.DateTime,
         nullable=False,

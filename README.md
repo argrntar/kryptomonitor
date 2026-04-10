@@ -14,11 +14,12 @@ Zbudowana w Pythonie (Flask + SQLAlchemy) jako projekt edukacyjny.
 - pobieranie historii transakcji do pliku CSV
 - czyszczenie historii cen kryptowalut starszych niż 30 dni
 - usuwanie konta użytkownika
+- aplikacja zawiera testy
 
 ## Wymagania
 
 - Python 3.12+
-- klucz API CoinGecko (darmowy plan Demo) — opcjonalny
+- klucz API CoinGecko (darmowy plan Demo) — opcjonalny do uruchomienia aplikacji lokalnie
 - Skrypt `setup_env.py` wygeneruje `SECRET_KEY` automatycznie i zapyta o klucz API CoinGecko. Klucz API można
   pominąć (n) — aplikacja uruchomi się z niestabilnym limitem zapytań. Historia cen kryptowalut również może nie być
   stabilna, co może mieć odzwierciedlenie na wykresie kryptowaluty. Po odpowiedzi reszta komend wykona się automatycznie.
@@ -26,11 +27,16 @@ Zbudowana w Pythonie (Flask + SQLAlchemy) jako projekt edukacyjny.
 
 ## Uruchomienie
 
+- aplikacja dostępna jest w dwóch wariantach do uruchomienia: na serwerze zewnętrznym i lokalnie
+- uruchomienie aplikacji na serwerze zewnętrznym Railway, przy pierwszym wejściu prawdopodobnie wystąpi cold start
+  (~15s) pod adresem: https://web-production-b2975.up.railway.app/coins/
+- poniżej przykład uruchomienia aplikacji lokalnie:
+
 ### Linux / Mac
 
 ```bash
-git clone https://gitlab.com/argrntar/kryptomonitor.git
-cd kryptomonitor
+git clone https://gitlab.com/argrntar/cryptomonitor.git
+cd cryptomonitor
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -52,19 +58,7 @@ flask --app run db upgrade
 python run.py
 ```
 
-Aplikacja dostępna pod: **http://127.0.0.1:5000**
-
-## Kolejne uruchomienia
-
-```bash
-# Linux / Mac
-source venv/bin/activate && python run.py
-```
-
-```cmd
-REM Windows
-call venv\Scripts\activate && python run.py
-```
+- lokalnie aplikacja dostępna pod: **http://127.0.0.1:5000**
 
 ---
 
@@ -73,7 +67,7 @@ call venv\Scripts\activate && python run.py
 Aplikacja pobiera dane o kryptowalutach z API CoinGecko.
 Darmowy plan Demo zapewnia stabilny limit 30 zapytań/min
 i miesięczny limit 10 000 zapytań — w zupełności wystarczający
-do korzystania z aplikacji.
+do korzystania z aplikacji lokalnie.
 
 ### Krok po kroku
 
@@ -175,6 +169,7 @@ cryptomonitor/
 ├── requirements.txt            # zależności Python
 ├── pytest.ini                  # konfiguracja pytest
 ├── README.md                   # dokumentacja projektu
+├── Procfile                    # konfiguracja startu aplikacji na Railway
 ├── .env.example                # szablon konfiguracji (dokumentacja zmiennych)
 ├── .gitignore                  # pliki wykluczone z repozytorium
 │
@@ -238,10 +233,15 @@ cryptomonitor/
     │
     └── static/                 # pliki statyczne
         ├── css/style.css       # dark theme, komponenty UI
-        └── js/price_chart.js   # wykres Chart.js z cache i filtrowaniem
+        └── js/
+            ├── price_chart.js  # wykres Chart.js z cache i filtrowaniem
+            ├── dashboard.js    # obsługa modalu "Zamknij wszystko"
+            ├── trade.js        # podgląd kosztu przy kupnie/sprzedaży
+            └── profile.js      # obsługa modalu usunięcia konta
 ```
 
 ---
+
 ## Deployment (Railway)
 
 Aplikacja skonfigurowana do deploymentu na [Railway](https://railway.app).
@@ -251,47 +251,48 @@ Aplikacja skonfigurowana do deploymentu na [Railway](https://railway.app).
 | Zmienna | Opis |
 |---|---|
 | `SECRET_KEY` | Losowy klucz — wygeneruj: `python -c "import secrets; print(secrets.token_hex(32))"` |
-| `DATABASE_URL` | Automatycznie ustawiana przez Railway po dodaniu PostgreSQL |
+| `DATABASE_URL` | Automatycznie ustawiana przez Railway po dodaniu PostgreSQL (`${{Postgres.DATABASE_URL}}`) |
 | `COINGECKO_API_KEY` | Opcjonalny klucz API CoinGecko |
-| `FLASK_ENV` | Ustaw na `production` |
+| `FLASK_CONFIG` | Ustaw na `production` — wybiera ProductionConfig z config.py |
 
 ### Uruchomienie na Railway
 
 Railway automatycznie:
 1. Instaluje zależności z `requirements.txt`
-2. Wykonuje `flask db upgrade` (migracje na PostgreSQL)
+2. Wykonuje `flask db upgrade` (migracje na PostgreSQL) na podstawie `Procfile`
 3. Uruchamia `gunicorn "run:app"` (na podstawie `Procfile`)
 
 ### Uwaga — psycopg2-binary
 
 `psycopg2-binary` (driver PostgreSQL) **nie jest instalowany lokalnie** —
 lokalnie aplikacja używa SQLite. Na Railway instaluje się automatycznie
-bo Railway używa Linuxa z Pythonem 3.12 gdzie dostępny jest gotowy wheel.
+z `requirements.txt`.
 
 Jeśli chcesz testować PostgreSQL lokalnie:
 ```bash
 pip install psycopg2-binary
 ```
 
-
+---
 
 ## Technologie
 
-| Technologia       | Wersja  | Zastosowanie                                           |
-|-------------------|---------|--------------------------------------------------------|
-| Flask             | 3.1.x   | framework webowy, blueprinty, Jinja2                   |
-| SQLAlchemy        | 2.0.x   | ORM, zapytania, unit of work, identity map             |
-| Flask-SQLAlchemy  | 3.1.x   | integracja SQLAlchemy z Flask                          |
-| Flask-Migrate     | 4.1.x   | migracje schematu bazy danych (Alembic)                |
-| Flask-Login       | 0.6.x   | sesje użytkowników, @login_required, user_loader       |
-| Flask-WTF         | 1.2.x   | formularze z ochroną CSRF                              |
-| WTForms           | 3.2.x   | walidacja pól, FlexibleDecimalField (przecinek/kropka) |
-| email-validator   | 2.x     | walidacja adresów email w formularzach                 |
-| python-dotenv     | 1.x     | zmienne środowiskowe z pliku .env                      |
-| httpx             | 0.28.x  | klient HTTP do komunikacji z CoinGecko API             |
-| Chart.js          | 4.4.0   | interaktywny wykres historii cen (CDN)                 |
-| SQLite            | —       | baza danych lokalnie (dev/test)                        |
-| pytest            | 9.x     | testy jednostkowe i funkcjonalne                       |
-| PostgreSQL        | —       | baza danych na produkcji (Railway)                     |
-| gunicorn          | 21.2.x  | serwer WSGI na produkcji (Railway)                     |
-| psycopg2-binary   | 2.9.x   | driver PostgreSQL (instalowany tylko na Railway)       |
+| Technologia       | Wersja   | Zastosowanie                                               |
+|-------------------|----------|------------------------------------------------------------|
+| Flask             | 3.1.x    | framework webowy, blueprinty, Jinja2                       |
+| SQLAlchemy        | 2.0.x    | ORM, zapytania, unit of work, identity map                 |
+| Flask-SQLAlchemy  | 3.1.x    | integracja SQLAlchemy z Flask                              |
+| Flask-Migrate     | 4.1.x    | migracje schematu bazy danych (Alembic)                    |
+| Flask-Login       | 0.6.x    | sesje użytkowników, @login_required, user_loader           |
+| Flask-WTF         | 1.2.x    | formularze z ochroną CSRF                                  |
+| Flask-Talisman    | 1.1.x    | nagłówki bezpieczeństwa HTTP (CSP, HSTS, clickjacking)     |
+| WTForms           | 3.2.x    | walidacja pól, FlexibleDecimalField (przecinek/kropka)     |
+| email-validator   | 2.x      | walidacja adresów email w formularzach                     |
+| python-dotenv     | 1.x      | zmienne środowiskowe z pliku .env                          |
+| httpx             | 0.28.x   | klient HTTP do komunikacji z CoinGecko API                 |
+| Chart.js          | 4.4.0    | interaktywny wykres historii cen (CDN)                     |
+| SQLite            | —        | baza danych lokalnie (dev/test)                            |
+| PostgreSQL        | —        | baza danych na produkcji (Railway)                         |
+| gunicorn          | 21.2.x   | serwer WSGI na produkcji (Railway)                         |
+| psycopg2-binary   | 2.9.x    | driver PostgreSQL (instalowany tylko na Railway)           |
+| pytest            | 9.x      | testy jednostkowe i funkcjonalne                           |

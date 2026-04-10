@@ -95,7 +95,7 @@ def _stage_buy(
 
     Commit należy do wywołującego (buy() lub close_all()).
     """
-    user.balance_usd = float(_round_balance(_to_decimal(user.balance_usd) - total_cost))
+    user.balance_usd = _round_balance(_to_decimal(user.balance_usd) - total_cost)
 
     holding = portfolio_repository.find_by_user_and_coin(user.id, coin.id)
     if holding is None:
@@ -106,8 +106,8 @@ def _stage_buy(
     new_total = old_amount + amount
     new_avg = (old_amount * old_price + amount * price) / new_total
 
-    holding.avg_buy_price = float(new_avg.quantize(PRICE_PRECISION, rounding=ROUND_DOWN))
-    holding.amount = float(new_total)
+    holding.avg_buy_price = new_avg.quantize(PRICE_PRECISION, rounding=ROUND_DOWN)
+    holding.amount = new_total
     holding.updated_at = datetime.now(timezone.utc)
 
     return transaction_repository.stage(
@@ -135,12 +135,10 @@ def _stage_sell(
 
     Commit należy do wywołującego (sell() lub close_all()).
     """
-    user.balance_usd = float(
-        _round_balance(_to_decimal(user.balance_usd) + total_value)
-    )
+    user.balance_usd = _round_balance(_to_decimal(user.balance_usd) + total_value)
 
     remaining = _round_amount(_to_decimal(holding.amount)) - amount
-    holding.amount = 0.0 if remaining < MIN_DUST else float(remaining)
+    holding.amount = Decimal("0") if remaining < MIN_DUST else remaining
     holding.updated_at = datetime.now(timezone.utc)
 
     return transaction_repository.stage(

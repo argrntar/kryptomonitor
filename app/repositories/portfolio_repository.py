@@ -21,7 +21,7 @@ Używane przez:
     - coin_routes.py        (detail – czy user posiada monetę)
 """
 from sqlalchemy import select
-
+from decimal import Decimal
 from app.extensions import db
 from app.models.portfolio import Portfolio
 
@@ -79,8 +79,8 @@ def create(user_id: int, coin_id: int) -> Portfolio:
     holding = Portfolio(
         user_id=user_id,
         coin_id=coin_id,
-        amount=0.0,
-        avg_buy_price=0.0,
+        amount=Decimal("0"),
+        avg_buy_price=Decimal("0"),
     )
     db.session.add(holding)
     db.session.flush()  # id dostępne, commit w serwisie

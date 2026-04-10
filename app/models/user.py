@@ -19,9 +19,8 @@ Uwaga: relacje portfolio i transactions nie są bezpośrednio używane
     - Alembic – widzi kompletny schemat relacji
 """
 from datetime import datetime, timezone
-
+from decimal import Decimal
 from flask_login import UserMixin
-
 from app.extensions import db
 
 
@@ -33,7 +32,7 @@ class User(UserMixin, db.Model):
     # index=True na username i email – często szukane w find_by_username/email
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    balance_usd = db.Column(db.Float, nullable=False, default=10_000.0)
+    balance_usd = db.Column(db.Numeric(18, 2), nullable=False, default=Decimal("10000.00"))
     created_at = db.Column(
         db.DateTime,
         nullable=False,

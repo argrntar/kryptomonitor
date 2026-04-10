@@ -25,7 +25,7 @@ Używane przez:
     - auth_forms.py     (validate_username, validate_email – sprawdzanie unikalności)
 """
 from sqlalchemy import select
-
+from decimal import Decimal
 from app.extensions import db
 from app.models.user import User
 
@@ -108,7 +108,7 @@ def create(
         username: str,
         email: str,
         password_hash: str,
-        balance_usd: float = 10_000.0,
+        balance_usd: Decimal = Decimal("10000.00"),
 ) -> User:
     """
     Tworzy nowego użytkownika i zwraca obiekt z wypełnionym id.
