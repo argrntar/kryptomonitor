@@ -163,6 +163,20 @@ def create_app(config_name: str = "default") -> Flask:
     app.register_blueprint(portfolio_bp)
 
     # ------------------------------------------------------------------
+    # Krok 5a – Context processor dla nawigacji
+    # Wstrzykuje nav_pnl do każdego szablonu dla zalogowanego użytkownika.
+    # ------------------------------------------------------------------
+    from flask_login import current_user as _current_user
+
+    @app.context_processor
+    def inject_nav_pnl():
+        """Dostarcza P&L portfela do paska nawigacji w każdym szablonie."""
+        if _current_user.is_authenticated:
+            from app.services import portfolio_service
+            return {"nav_pnl": portfolio_service.get_nav_pnl(_current_user)}
+        return {"nav_pnl": None}
+
+    # ------------------------------------------------------------------
     # Krok 6 – Ostrzeżenia konfiguracyjne
     # Widoczne w terminalu przy starcie serwera.
     # WARNING jest domyślnie widoczny bez dodatkowej konfiguracji logowania.

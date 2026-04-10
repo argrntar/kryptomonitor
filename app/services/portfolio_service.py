@@ -453,3 +453,44 @@ def get_export_data(user_id: int) -> tuple[list[Transaction], dict[int, Coin]]:
     coins = coin_repository.find_by_ids(coin_ids)
     coins_map = {c.id: c for c in coins}
     return transactions, coins_map
+
+
+def get_nav_pnl(user: User) -> dict | None:
+    """
+    Oblicza P&L dla paska nawigacji.
+
+    Lekka wersja build_positions() – tylko suma wartości i kosztów.
+    Wywoływana przez context processor przy każdym requeście zalogowanego
+    użytkownika. Zwraca None jeśli user nie ma żadnych pozycji.
+
+    Returns:
+        Słownik z kluczami pnl_usd, pnl_pct, is_positive lub None.
+    """
+    holdings = portfolio_repository.find_by_user(user.id)
+    active = [h for h in holdings if _to_decimal(h.amount) > Decimal("0")]
+    if not active:
+        return None
+
+    coin_ids = [h.coin_id for h in active]
+    coins_map = {c.id: c for c in coin_repository.find_by_ids(coin_ids)}
+
+    total_value = Decimal("0")
+    total_cost = Decimal("0")
+
+    for holding in active:
+        coin = coins_map.get(holding.coin_id)
+        if coin is None:
+            continue
+        price = _to_decimal(coin.current_price_usd) if coin.current_price_usd is not None else _to_decimal(holding.avg_buy_price)
+        amount = _to_decimal(holding.amount)
+        total_value += amount * price
+        total_cost += amount * _to_decimal(holding.avg_buy_price)
+
+    pnl_usd = total_value - total_cost
+    pnl_pct = (pnl_usd / total_cost * 100) if total_cost > Decimal("0") else Decimal("0")
+
+    return {
+        "pnl_usd": pnl_usd,
+        "pnl_pct": pnl_pct,
+        "is_positive": pnl_usd >= Decimal("0"),
+    }
