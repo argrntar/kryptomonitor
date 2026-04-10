@@ -63,6 +63,7 @@ def db(app):
         yield _db
         _db.session.remove()
         _db.drop_all()
+        _db.engine.dispose()
 
 
 @pytest.fixture(scope="function")
@@ -116,3 +117,24 @@ def logged_in_client(client, user):
     }, follow_redirects=True)
     return client
 
+
+@pytest.fixture(autouse=True)
+def mock_coingecko(monkeypatch):
+    """
+    Blokuje wywołania CoinGecko API podczas testów.
+
+    autouse=True – stosowany automatycznie dla każdego testu bez
+    konieczności jawnego dodawania do parametrów funkcji testowej.
+
+    Bez tego mocka logged_in_client loguje się i przekierowuje na
+    /coins/ który wywołuje update_prices() → prawdziwe API → INSERT
+    bitcoin do bazy testowej → kolizja z fixture coin → UNIQUE constraint.
+    """
+    monkeypatch.setattr(
+        "app.api_clients.coingecko_client.get_top_coins",
+        lambda: []
+    )
+    monkeypatch.setattr(
+        "app.api_clients.coingecko_client.get_coin_history",
+        lambda *args, **kwargs: []
+    )

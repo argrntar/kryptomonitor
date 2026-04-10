@@ -27,10 +27,10 @@ Zbudowana w Pythonie (Flask + SQLAlchemy) jako projekt edukacyjny.
 
 ## Uruchomienie
 
-- aplikacja dostępna jest w dwóch wariantach do uruchomienia: na serwerze zewnętrznym i lokalnie
-- uruchomienie aplikacji na serwerze zewnętrznym Railway, przy pierwszym wejściu prawdopodobnie wystąpi cold start
+- aplikacja dostępna jest w dwóch wariantach do uruchomienia: na serwerze zewnętrznym Railway i lokalnie
+- uruchomienie aplikacji na serwerze zewnętrznym Railway: przy pierwszym wejściu prawdopodobnie wystąpi cold start
   (~15s) pod adresem: https://web-production-b2975.up.railway.app/coins/
-- poniżej przykład uruchomienia aplikacji lokalnie:
+- poniżej przykład uruchomienia i przetestowania aplikacji lokalnie:
 
 ### Linux / Mac
 
@@ -119,21 +119,10 @@ eliminuje to ryzyko.
 Projekt zawiera testy jednostkowe i funkcjonalne napisane w pytest.
 
 ```bash
-# Uruchom wszystkie testy
-pytest
-```
-```bash
-# Szczegółowy widok
+# Uruchom wszystkie testy - szczegółowy widok
 pytest -v
 ```
-```bash
-# Tylko testy jednostkowe (serwisy)
-pytest tests/unit/
-```
-```bash
-# Tylko testy funkcjonalne (HTTP)
-pytest tests/functional/
-```
+
 ```bash
 # Z pokryciem kodu
 pytest --cov=app --cov-report=term-missing
@@ -263,10 +252,6 @@ Railway automatycznie:
 3. Uruchamia `gunicorn "run:app"` (na podstawie `Procfile`)
 
 ### Uwaga — psycopg2-binary
-
-`psycopg2-binary` (driver PostgreSQL) **nie jest instalowany lokalnie** —
-lokalnie aplikacja używa SQLite. Na Railway instaluje się automatycznie
-z `requirements.txt`.
 
 Jeśli chcesz testować PostgreSQL lokalnie:
 ```bash

@@ -20,11 +20,24 @@ from datetime import datetime, timezone
 
 @pytest.fixture
 def coin(db):
+    """
+        Moneta testowa Bitcoin w bazie.
+
+        last_updated ustawiony na now() – zapobiega wywołaniu CoinGecko API
+        przez coin_service.update_prices() podczas testu. Throttling sprawdza
+        last_updated przez coin_repository.find_most_recently_updated() i
+        pomija update jeśli minęło mniej niż 5 minut.
+
+        Bez last_updated throttling widzi None i próbuje odpytać API,
+        które może wstawić duplikat bitcoin → UNIQUE constraint failed.
+        """
+    from datetime import datetime, timezone
     c = Coin(
         coingecko_id="bitcoin",
         symbol="BTC",
         name="Bitcoin",
         current_price_usd=68_000.0,
+        last_updated=datetime.now(timezone.utc),  # ← dodaj tę linię
     )
     db.session.add(c)
     db.session.commit()
