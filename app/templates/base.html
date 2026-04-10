@@ -14,7 +14,6 @@
         body {
             background: var(--bg);
             margin: 0;
-            visibility: hidden;
         }
     </style>
 
@@ -69,10 +68,6 @@
 </main>
 
 {% block scripts %}{% endblock %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.visibility = 'visible';
-});
-</script>
+
 </body>
 </html>
